@@ -1,3 +1,5 @@
+import asyncio
+import aiohttp
 import streamlit as st
 
 from frontend.st_utils import get_backend_api_client, initialize_st_page
@@ -7,6 +9,17 @@ initialize_st_page(title="Credentials", icon="🔑")
 # Page content
 client = get_backend_api_client()
 NUM_COLUMNS = 4
+
+
+async def submit_credentials(account_name, connector_name, config_inputs):
+    """Submit credentials using async context manager to properly close session"""
+    async with aiohttp.ClientSession() as session:
+        async with session.post(
+            f"{client.base_url}/add-connector-keys/{account_name}/{connector_name}",
+            json=config_inputs,
+            headers=client.headers
+        ) as response:
+            return await response.text()
 
 
 @st.cache_data
@@ -105,6 +118,9 @@ for i, config in enumerate(config_map):
 
 with cols[-1]:
     if st.button("Submit Credentials"):
-        response = client.add_connector_keys(account_name, connector_name, config_inputs)
-        if response:
-            st.success(response)
+        try:
+            response = asyncio.run(submit_credentials(account_name, connector_name, config_inputs))
+            if response:
+                st.success(response)
+        except Exception as e:
+            st.error(f"Error submitting credentials: {str(e)}")

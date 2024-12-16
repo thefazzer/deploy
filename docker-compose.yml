@@ -1,3 +1,5 @@
+version: '3.9'
+
 services:
   dashboard:
     container_name: dashboard
@@ -5,16 +7,17 @@ services:
     ports:
       - "8501:8501"
     environment:
-        - AUTH_SYSTEM_ENABLED=False
-        - BACKEND_API_HOST=backend-api
-        - BACKEND_API_PORT=8000
-        - BACKEND_API_USERNAME=admin
-        - BACKEND_API_PASSWORD=admin
+      - AUTH_SYSTEM_ENABLED=False
+      - BACKEND_API_HOST=backend-api
+      - BACKEND_API_PORT=8000
+      - BACKEND_API_USERNAME=admin
+      - BACKEND_API_PASSWORD=admin
     volumes:
       - ./credentials.yml:/home/dashboard/credentials.yml
       - ./pages:/home/dashboard/frontend/pages
     networks:
-        - emqx-bridge
+      - emqx-bridge
+
   backend-api:
     container_name: backend-api
     image: hummingbot/backend-api:latest
@@ -32,6 +35,7 @@ services:
       - PASSWORD=admin
     networks:
       - emqx-bridge
+
   emqx:
     container_name: hummingbot-broker
     image: emqx:5
@@ -66,9 +70,13 @@ services:
 
 networks:
   emqx-bridge:
+    name: emqx-bridge
     driver: bridge
+    ipam:
+      config:
+        - subnet: "172.22.0.0/16"
 
 volumes:
-  emqx-data: { }
-  emqx-log: { }
-  emqx-etc: { }
+  emqx-data: {}
+  emqx-log: {}
+  emqx-etc: {}
